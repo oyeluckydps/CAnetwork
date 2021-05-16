@@ -81,6 +81,23 @@ def NAND(x, y):
 def ONE(x, y):
     return 1
 
+half_symm_impl = {
+    'ZERO': ZERO,
+    'AND': AND,
+    'XOR': XOR,
+    'OR': OR
+}
+
+symm_impl = {
+    'ZERO': ZERO,
+    'AND': AND,
+    'XOR': XOR,
+    'OR': OR,
+    'NOR': NOR,
+    'XNOR': XNOR,
+    'NAND': NAND,
+    'ONE': ONE
+}
 
 '''
 Following are the implementation of symmetrical gates of the form:

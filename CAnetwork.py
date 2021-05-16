@@ -3,6 +3,11 @@ from CAnode import CAnode
 from support import *
 import warnings
 import pandas as pd
+from operators import *
+from pathlib import Path
+import os
+
+cwd = Path(os.getcwd())
 
 def construct_fully_connected_graph(num_nodes):
     graph = {}
@@ -37,7 +42,7 @@ def construct_chain(length):
 def construct_ring(length):
     graph = construct_chain(length)
     graph[0].append(length-1)
-    graph(length-1).append(0)
+    graph[length-1].append(0)
     return graph
 
 def construct_tesseract(dimension, naming_convention = 'number'):
@@ -71,7 +76,7 @@ class CAnetwork:
             self.msg = ''
             if type(node_values) is not list:
                 if node_values == 'random':
-                    node_values = [random.randint(0, 1) for i in range(len(graph))]
+                    node_values = [int(random.random()>=0.5) for i in range(len(graph))]
             for (node_name, edges), value in zip(self.network.items(), node_values):
                 self.nodes[node_name] = CAnode(node_name, value, incoming_operator=incoming_operator, post_reg_operator=post_reg_operator)
             for node_name, edges in self.network.items():
@@ -81,6 +86,8 @@ class CAnetwork:
         else:
             self.network = {}
             self.nodes = {}
+        self.logged_values = pd.DataFrame()
+        self.log_value()
 
     def convert_to_nodes(self, node_list):
         '''
@@ -242,11 +249,26 @@ class CAnetwork:
             node.enact_value()
         return self.network_value
 
-    def step_the_network(self):
+    def log_value(self, instance_name = None):
+        s = pd.Series({name:value for (name, _), value in zip(self.nodes.items(), self.network_value)})
+        if instance_name:
+            s.name = instance_name
+            self.logged_values = self.logged_values.append(s)
+        else:
+            self.logged_values = self.logged_values.append(s, ignore_index=True)
+
+    def step_the_network(self, instance_name = None):
         self.process_network()
         self.enact_value()
-        self.log_value()
+        self.log_value(instance_name)
         return self.network_value
+
+    def log_to_file(self, filename):
+        self_string = self.__str__() + "\n\n\n" + '*'*len(self) + "\n"
+        byte_seq = bytes(self_string, 'utf-8')
+        write_bytes_to_file(filename, byte_seq)
+        byte_seq = df_to_bianryFile(self.logged_values)
+        write_bytes_to_file(filename, byte_seq)
 
     @property
     def network_value(self):
@@ -286,19 +308,43 @@ class CAnetwork:
 
 
 if __name__ == '__main__':
-    graph = construct_binary_bidir_tree(6)
+    # graph = construct_binary_bidir_tree(6)
     # graph_conn = construct_fully_connected_graph(10)
-    graph_6 = construct_tesseract(6, 'binary')
+    # graph_6 = construct_tesseract(6, 'binary')
     # node1 = CAnode(1,1)
     # print(node1.__repr__())
-    network = CAnetwork(graph, 'random')
-    network.add_node('NN1', 0, incoming_nodes=[63], outgoing_nodes=[126])
-    network.add_edge('NN1', 0)
-    network.add_edge(0, 'NN1')
-    network.add_node('NN2', 'random', incoming_nodes=[63, 'NN1'], outgoing_nodes=[126, 'NN1'])
-    print(network)
-    network.remove_node('NN1')
-    network.remove_node(63)
-    network.remove_node(126)
-    print(network)
+    # network = CAnetwork(graph, 'random')
+    # network.add_node('NN1', 0, incoming_nodes=[63], outgoing_nodes=[126])
+    # network.add_edge('NN1', 0)
+    # network.add_edge(0, 'NN1')
+    # network.add_node('NN2', 'random', incoming_nodes=[63, 'NN1'], outgoing_nodes=[126, 'NN1'])
+    # print(network)
+    # network.remove_node('NN1')
+    # network.remove_node(63)
+    # network.remove_node(126)
+    # print(network)
+
+
+    # graph = construct_tesseract(3)
+    # graph = construct_binary_bidir_tree(3)
+
+
+    SIM_CASES = 10
+    folder_base = cwd / Path("tesseract")
+    for dim in range(3, 8):
+        folder_dim = folder_base/("dim_"+str(dim))
+        for F_name, F_fun in half_symm_impl.items():
+            folder_F_name = folder_dim / ("F_" + F_name)
+            for G_name, G_fun in impl.items():
+                folder_G_name = folder_F_name / ("G_"+binary(G_name, 4))
+                for sim in range(SIM_CASES):
+                    file_name = folder_G_name / (str(sim)+".txt")
+                    graph = construct_tesseract(dim)
+                    network = CAnetwork(graph, 'random', F_fun, G_fun)
+                    for time in range(1000):
+                        network.step_the_network()
+                    parent_folder = file_name.parents[0]
+                    parent_folder.mkdir(parents = True, exist_ok=True)
+                    network.log_to_file(file_name)
+                    pass
     pass
