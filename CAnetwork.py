@@ -2,10 +2,10 @@ import random
 from CAnode import CAnode
 from support import *
 import warnings
-import pandas as pd
 from operators import *
 from pathlib import Path
 import os
+import time
 
 cwd = Path(os.getcwd())
 
@@ -86,8 +86,9 @@ class CAnetwork:
         else:
             self.network = {}
             self.nodes = {}
-        self.logged_values = pd.DataFrame()
-        self.log_value()
+        self.logged_values = ([], [])     #Logger doesn't work if you add or remove node in between of simulation
+        self.match_index = None
+        self.log_value(-1)
 
     def convert_to_nodes(self, node_list):
         '''
@@ -247,35 +248,64 @@ class CAnetwork:
     def enact_value(self):
         for _, node in self:
             node.enact_value()
-        return self.network_value
 
     def log_value(self, instance_name = None):
-        s = pd.Series({name:value for (name, _), value in zip(self.nodes.items(), self.network_value)})
-        if instance_name:
-            s.name = instance_name
-            self.logged_values = self.logged_values.append(s)
-        else:
-            self.logged_values = self.logged_values.append(s, ignore_index=True)
+        self.logged_values[1].append(self.network_value_str)
+        if instance_name is None:
+            instance_name = self.logged_values[0][-1]+1
+        self.logged_values[0].append(instance_name)
+        self.last_index = instance_name
+
+    def check_redundancy(self):
+        try:
+            return self.logged_values[1][:-1].index(self.logged_values[1][-1]), self.logged_values[0][-1]
+        except ValueError:
+            return None, self.logged_values[0][-1]
 
     def step_the_network(self, instance_name = None):
         self.process_network()
         self.enact_value()
         self.log_value(instance_name)
-        return self.network_value
 
-    def log_to_file(self, filename):
-        self_string = self.__str__() + "\n\n\n" + '*'*len(self) + "\n"
+    def simulate_the_network(self, iterator, early_stop = True):
+        for t in iterator:
+            self.step_the_network(instance_name=t)
+            if early_stop:
+                match_index, last_index = self.check_redundancy()
+                if match_index is not None: # Found a match with last row.
+                    self.match_index, self.last_index = match_index, last_index
+                    break
+        return
+
+    def log_to_file(self, filename, match_detail = True):
+        self_string = ''
+        graph_string = "Graph representation of the network is:\n" + dict_str(self.network)
+        self_string += graph_string
+        if match_detail:
+            match_string = '*'*len(self) + "\n"
+            if self.match_index is not None:
+                match_string += "Found a match for last row = " + str(self.last_index) + ", at match row = "\
+                + str(self.match_index) +".\n\n"
+            else:
+                match_string += "No match found!\n\n"
+            self_string += match_string
+        self_string +=  '*'*len(self) + "\n"
         byte_seq = bytes(self_string, 'utf-8')
         write_bytes_to_file(filename, byte_seq)
-        byte_seq = df_to_bianryFile(self.logged_values)
-        write_bytes_to_file(filename, byte_seq)
+
+        logger_to_file(filename, self.logged_values[1])
+
 
     @property
     def network_value(self):
-        network_value = []
+        return [node.value for _, node in self]
+
+    @property
+    def network_value_str(self):
+        network_str = ''
         for _, node in self:
-            network_value.append(node.value)
-        return network_value
+            network_str += str(node.value)
+        return network_str
 
     def __iter__(self):
         return iter(self.nodes.items())
@@ -328,23 +358,47 @@ if __name__ == '__main__':
     # graph = construct_tesseract(3)
     # graph = construct_binary_bidir_tree(3)
 
-
-    SIM_CASES = 10
-    folder_base = cwd / Path("tesseract")
-    for dim in range(3, 8):
-        folder_dim = folder_base/("dim_"+str(dim))
-        for F_name, F_fun in half_symm_impl.items():
-            folder_F_name = folder_dim / ("F_" + F_name)
-            for G_name, G_fun in impl.items():
-                folder_G_name = folder_F_name / ("G_"+binary(G_name, 4))
-                for sim in range(SIM_CASES):
-                    file_name = folder_G_name / (str(sim)+".txt")
-                    graph = construct_tesseract(dim)
-                    network = CAnetwork(graph, 'random', F_fun, G_fun)
-                    for time in range(1000):
-                        network.step_the_network()
-                    parent_folder = file_name.parents[0]
-                    parent_folder.mkdir(parents = True, exist_ok=True)
-                    network.log_to_file(file_name)
-                    pass
+    # TOTAL_TIME_STEPS = 10000
+    # SIM_CASES = 20
+    # base_name = "binary_tree"
+    # folder_base = cwd / Path(base_name)
+    # for dim in list(range(10,20,3)):# + list(range(50,200,10)):
+    #     folder_dim = folder_base/("dim_"+str(dim))
+    #     all_match_results = {}
+    #     for F_name, F_fun in half_symm_impl.items():
+    #         folder_F_name = folder_dim / ("F_" + F_name)
+    #         for G_name, G_fun in impl.items():
+    #             folder_G_name = folder_F_name / ("G_"+binary(G_name, 4))
+    #             for sim in range(SIM_CASES):
+    #                 file_name = folder_G_name / (str(sim)+".txt")
+    #                 print("Generating : " + str(file_name))
+    #                 graph = construct_binary_bidir_tree(dim)
+    #                 network = CAnetwork(graph, 'random', F_fun, G_fun)
+    #                 network.simulate_the_network(range(TOTAL_TIME_STEPS), early_stop=True)
+    #                 parent_folder = file_name.parents[0]
+    #                 parent_folder.mkdir(parents = True, exist_ok=True)
+    #                 network.log_to_file(file_name, match_detail=True)
+    #                 all_match_results[(dim, F_name, binary(G_name, 4), sim)] = (-1 if network.match_index == 'init' else network.match_index, network.last_index)
+    #                 pass
+    #     f = open(folder_base/(str(dim) + ".log"), 'w')
+    #     summary_str = "all_match_results = " + dict_str(all_match_results)
+    #     f.write(summary_str)
+    #     f.close()
+    # pass
+    dim = 13
+    TOTAL_TIME_STEPS = 200
+    F_fun = AND
+    G_fun = impl_1010
+    graph = construct_binary_bidir_tree(dim)
+    print(graph)
+    network = CAnetwork(graph, 'random', F_fun, G_fun)
+    start_time = time.time()
+    network.simulate_the_network(range(TOTAL_TIME_STEPS), early_stop=True)
+    end_time = time.time()
+    print(end_time-start_time)
+    print(network.match_index, network.last_index)
+    start_time = time.time()
+    network.log_to_file('check.log')
+    end_time = time.time()
+    print(end_time - start_time)
     pass

@@ -1,6 +1,7 @@
 '''
 Custom boolean functions to be used for data processing on nodes.
 '''
+from functools import reduce
 
 def None_handler(func):
     '''
@@ -36,8 +37,14 @@ def None_handler(func):
         val = int(func(x, y))%2
         return val
 
-    return GATE_wrapper
+    def array_processesor(l):
+        if len(l) == 1:
+            return int(func(l[0], l[0]))
+        else:
+            return int(reduce(lambda x, y: func(x, y), l))
 
+    # return GATE_wrapper
+    return array_processesor
 
 
 '''
@@ -67,15 +74,15 @@ def OR(x, y):
 
 @None_handler
 def NOR(x, y):
-    return not OR(x, y)
+    return not (x or y)
 
 @None_handler
 def XNOR(x, y):
-    return not XOR(x, y)
+    return not (x^y)
 
 @None_handler
 def NAND(x, y):
-    return not AND(x, y)
+    return not (x and y)
 
 @None_handler
 def ONE(x, y):
@@ -113,7 +120,7 @@ impl_0000 = ZERO
 
 @None_handler
 def impl_0001(x, y):
-    return AND(not x, y)
+    return not x and y
 
 impl_0010 = AND
 
@@ -123,7 +130,7 @@ def impl_0011(x, y):
 
 @None_handler
 def impl_0100(x, y):
-    return AND(x, not y)
+    return x and not y
 
 impl_0101 = XOR
 
@@ -143,7 +150,7 @@ impl_1010 = XNOR
 
 @None_handler
 def impl_1011(x, y):
-    return not impl_0100(x, y)
+    return y or not x
 
 @None_handler
 def impl_1100(x, y):
@@ -153,7 +160,7 @@ impl_1101 = NAND
 
 @None_handler
 def impl_1110(x, y):
-    return not impl_0001(x, y)
+    return not y or x
 
 impl_1111 = ONE
 
@@ -177,25 +184,7 @@ impl = {
 }
 
 if __name__ == '__main__':
-    x, y = 1, 0
-    val = ZERO(x, y)
-    print(val)
-    val = AND(x, y)
-    print(val)
-    val = XOR(x, y)
-    print(val)
-    val = OR(x, y)
-    print(val)
-    val = NOR(x, y)
-    print(val)
-    val = XNOR(x, y)
-    print(val)
-    val = NAND(x, y)
-    print(val)
-    val = ONE(x, y)
-    print(val)
-    print("\n\n\n")
 
-    x, y = 1, 1
+    l = [1, 0]
     for i in range(16):
-        print(impl[i], ": ", impl[i](x, y))
+        print(impl[i], ": ", impl[i](l))

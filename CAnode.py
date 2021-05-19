@@ -1,6 +1,3 @@
-from functools import reduce
-from operators import *
-
 PRINT_WIDTH = 70
 
 class CAnode:
@@ -64,11 +61,10 @@ class CAnode:
         '''
         if self.incoming_nodes:
             incoming_values = [x.value for x in self.incoming_nodes]
-            evaluated_value = reduce(lambda x, y: self._incoming_operator(x, y), incoming_values)
+            evaluated_value = self._incoming_operator(incoming_values)
+            self.post_eval_value = self._post_reg_operator([self.value, evaluated_value])
         else:
-            evaluated_value = None
-        self.post_eval_value = self._post_reg_operator(self.value, evaluated_value)
-        return self.post_eval_value
+            self.post_eval_value = self._post_reg_operator([self.value])
 
     def enact_value(self):
         self.value = self.post_eval_value
