@@ -18,27 +18,27 @@ def ZERO(l):
 
 
 def AND(l):
-    return int(reduce(lambda x, y: x and y, l))
+    return int(all(l))
 
 
 def XOR(l):
-    return int(reduce(lambda x, y: x^y, l))
+    return int(sum(l)%2)
 
 
 def OR(l):
-    return int(reduce(lambda x, y: x or y, l))
+    return int(any(l))
 
 
 def NOR(l):
-    return int(not(reduce(lambda x, y: x or y, l)))
+    return int(not any(l))
 
 
 def XNOR(l):
-    return int(not(reduce(lambda x, y: x^y, l)))
+    return int((sum(l)+1)%2)
 
 
 def NAND(l):
-    return int(not(reduce(lambda x, y: x and y, l)))
+    return int(not all(l))
 
 
 def ONE(l):
@@ -72,53 +72,60 @@ Following are the implementation of symmetrical gates of the form:
       |---------|
 Eight of the symmetrical forms from above can be reused and only other eight require implementation.
 '''
-impl_0000 = ZERO
+def impl_0000(x, y):
+    return 0
 
 
-def impl_0001(l):
-    return int(reduce(lambda x, y: not x and y, l))
+def impl_0001(x, y):
+    return int(not x and y)
 
-impl_0010 = AND
-
-
-def impl_0011(l):
-    return int(l[-1])
+def impl_0010(x, y):
+    return int(x and y)
 
 
-def impl_0100(l):
-    return int(reduce(lambda x, y: x and not y, l))
-
-impl_0101 = XOR
+def impl_0011(x, y):
+    return int(y)
 
 
-def impl_0110(l):
-    return int(l[0])
+def impl_0100(x, y):
+    return int(x and not y)
 
-impl_0111 = OR
-
-impl_1000 = NOR
-
-
-def impl_1001(l):
-    return int(not(l[0]))
-
-impl_1010 = XNOR
+def impl_0101(x, y):
+    return int(x^y)
 
 
-def impl_1011(l):
-    return int(reduce(lambda x, y: y or not x, l))
+def impl_0110(x, y):
+    return int(x)
+
+def impl_0111(x, y):
+    return int(x or y)
+
+def impl_1000(x, y):
+    return int(not(x or y))
+
+def impl_1001(x, y):
+    return int(not(x))
+
+def impl_1010(x, y):
+    return int(not(x^y))
 
 
-def impl_1100(l):
-    return int(not l[-1])
-
-impl_1101 = NAND
+def impl_1011(x, y):
+    return int(y or not x)
 
 
-def impl_1110(l):
-    return int(reduce(lambda x, y: x or not y, l))
+def impl_1100(x, y):
+    return int(not(y))
 
-impl_1111 = ONE
+def impl_1101(x, y):
+    return int(not(x and y))
+
+
+def impl_1110(x, y):
+    return int(x or not y)
+
+def impl_1111(x, y):
+    return 1
 
 impl = {
     0: impl_0000,
@@ -141,6 +148,6 @@ impl = {
 
 if __name__ == '__main__':
 
-    l = [1, 0]
+    x, y = 1, 1
     for i in range(16):
-        print(impl[i], ": \t\t", impl[i](l))
+        print(impl[i], ": \t\t", impl[i](x, y))

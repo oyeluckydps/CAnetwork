@@ -62,9 +62,9 @@ class CAnode:
         if self.incoming_nodes:
             incoming_values = [x.value for x in self.incoming_nodes]
             evaluated_value = self._incoming_operator(incoming_values)
-            self.post_eval_value = self._post_reg_operator([self.value, evaluated_value])
+            self.post_eval_value = self._post_reg_operator(self.value, evaluated_value)
         else:
-            self.post_eval_value = self._post_reg_operator([self.value])
+            self.post_eval_value = self._post_reg_operator(self.value, self.value)
 
     def enact_value(self):
         self.value = self.post_eval_value
