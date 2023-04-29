@@ -5,12 +5,11 @@ A compact pyhton library to simulate Cellular automata on various topograpy/netw
 - This indermediate output is then processed with the state of the node itself (i.e the value stored in the node which is also sent as output and received as input by its neighbour nodes) using a POST-OPERATOR which can be any of the 16 possible operators descibed below.
 
 TRUTH TABLE:
-    \ X 0    1
-   Y \ ---------|
-   0  | a  | b  |
-      |---------|
-   1  | d  | c  |
-      |---------|
+| Y\X | 0 | 1 |
+|-----|---|---|
+| 0   | a | b |
+| 1   | c | d |
+
  is operator abcd. Here X is the self-state of the node and Y is the intermediate output value of input signals.
 
 It is noted that the phase transition and chaotic behaviour is observed not just in the Rule 30 and Rule 110 but also on other rule equivalents.
