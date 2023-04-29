@@ -1,3 +1,5 @@
+# Desciption
+
 A compact pyhton library to simulate Cellular automata on various topograpy/networks. 
 - By default the values are binary for every node i.e 1 or 0 only.
 - The library is helpful in constructing a directed network of nodes for given topography (say binary tree, ring, fully-connected, n-D cube etc).
@@ -5,18 +7,20 @@ A compact pyhton library to simulate Cellular automata on various topograpy/netw
 - This indermediate output is then processed with the state of the node itself (i.e the value stored in the node which is also sent as output and received as input by its neighbour nodes) using a POST-OPERATOR which can be any of the 16 possible operators descibed below.
 
 TRUTH TABLE:
-    \ X 0    1
-   Y \ ---------|
-   0  | a  | b  |
-      |---------|
-   1  | d  | c  |
-      |---------|
+| Y\X | 0 | 1 |
+|-----|---|---|
+| 0   | a | b |
+| 1   | c | d |
+
  is operator abcd. Here X is the self-state of the node and Y is the intermediate output value of input signals.
 
-It is noted that the phase transition and chaotic behaviour is observed not just in the Rule 30 and Rule 110 but also on other rule equivalents.
+# Results
+
+- It is noted that the phase transition and chaotic behaviour is observed not just in the Rule 30 and Rule 110 but also on other rule equivalents. 
+- A video has been uploaded explaining the operator on the input signals (PRE-OPERATOR) is XOR while the operator (POST-OPERATOR) on this output with node's own state is NOR. The video is Phase_Transition_in_F_XOR_G_1000_CA_Hypercube7.mp4
 
 Here is a summary of some of the interesting cases that may be explored in depth in future.
-
+```text
 PRE-OPERATOR, POST-OPERATOR --> Conclusion
 
 binary_tree
@@ -41,5 +45,7 @@ teserract
 	XOR, 	1000 --> Interesting case
 	XOR, 	1011 --> Interesting case
 	XOR, 	1101 --> Interesting case
-  
-A video has been uploaded explaining the operator on the input signals (PRE-OPERATOR) is XOR while the operator (POST-OPERATOR) on this output with node's own state is NOR. The video is Phase_Transition_in_F_XOR_G_1000_CA_Hypercube7.mp4
+```
+
+
+
